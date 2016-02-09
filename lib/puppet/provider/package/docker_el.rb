@@ -6,7 +6,7 @@ Puppet::Type.type(:package).provide(:docker_el) do
 
   def dockerfile_line(context)
     version = @resource[:ensure]
-    script = "CMD yum install #{@resource[:name]} -y"
+    script = "RUN yum install #{@resource[:name]} -y"
 
     case version
     when :latest

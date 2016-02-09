@@ -12,7 +12,7 @@ describe Puppet::Type.type(:package).provider(:docker_el) do
 
     it "should return the correct string" do
       result = subject.dockerfile_line(context)
-      expect(result).to eq("CMD yum install foo")
+      expect(result).to eq("RUN yum install foo -y")
     end
   end
 
@@ -27,7 +27,7 @@ describe Puppet::Type.type(:package).provider(:docker_el) do
 
     it "should return the correct string" do
       result = subject.dockerfile_line(context)
-      expect(result).to eq("CMD yum install foo-bar")
+      expect(result).to eq("RUN yum install foo-bar -y")
     end
   end
 end

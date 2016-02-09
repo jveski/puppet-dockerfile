@@ -112,7 +112,7 @@ describe "the dockerfile function" do
     }
     MANIFEST
 
-    expect(result).to eq("FROM centos:7\nCMD yum install test\nCMD yum install test2\n")
+    expect(result).to eq("FROM centos:7\nRUN yum install test -y\nRUN yum install test2 -y\n")
   end
 
   it "returns the correct string when given no resources" do
