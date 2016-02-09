@@ -82,8 +82,8 @@ Puppet::Functions.create_function('dockerfile') do
       @content.concat("#{key.to_s.upcase} #{value}\n")
     end
 
-    def append_slug(slug)
-      @content.concat("#{slug}\n")
+    def append_line(line)
+      @content.concat("#{line}\n")
     end
   end
 
@@ -114,7 +114,7 @@ Puppet::Functions.create_function('dockerfile') do
       def accept(visitor)
         visitor.append_directive(:from, parent_image) if parent_image
 
-        scripts.each { |script| visitor.append_slug(script) }
+        scripts.each { |script| visitor.append_line(script) }
       end
     end
 
