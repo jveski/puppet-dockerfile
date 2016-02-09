@@ -24,15 +24,6 @@ The command doesn't need to be idempotent since it will only ever be invoked dur
 TODO
 
 
-## TODO
-* Providers for built-in resource types (file, user, service, etc.)
-* Traverse dependency graph instead of including resources in evaluation order
-* Types for misc. Dockerfile directives (env, expose, etc.)
-* Make each Dockerfile directive "safe" (i.e. escape where necessary)
-* Examples in README
-* Acceptance tests (with Docker in Travis)
-
-
 ## Contributing
 * Find a TODO or bug
 * Fork/branch/commit/PR
