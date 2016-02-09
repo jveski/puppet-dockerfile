@@ -4,9 +4,9 @@ Puppet::Type.type(:package).provide(:docker_el) do
   confine :feature => :docker
   has_features :versionable
 
-  def build_script(context)
+  def dockerfile(context)
     version = @resource[:ensure]
-    script = "yum install #{@resource[:name]}"
+    script = "CMD yum install #{@resource[:name]}"
 
     case version
     when :latest

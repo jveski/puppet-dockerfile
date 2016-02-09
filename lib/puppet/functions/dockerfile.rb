@@ -81,6 +81,10 @@ Puppet::Functions.create_function('dockerfile') do
     def append_directive(key, value)
       @content.concat("#{key.to_s.upcase} #{value}\n")
     end
+
+    def append_slug(slug)
+      @content.concat("#{slug}\n")
+    end
   end
 
   # Visitor is responsible for two things primarily:
@@ -110,9 +114,7 @@ Puppet::Functions.create_function('dockerfile') do
       def accept(visitor)
         visitor.append_directive(:from, parent_image) if parent_image
 
-        scripts.each do |script|
-          visitor.append_directive(:cmd, script)
-        end
+        scripts.each { |script| visitor.append_slug(script) }
       end
     end
 
@@ -142,8 +144,8 @@ Puppet::Functions.create_function('dockerfile') do
       check_preconfiguration
 
       ral = set_provider(resource)
-      script = ral.provider.build_script(context)
-      raise Puppet::Error, "Resource type '#{ral.type}' can't be included in the Dockerfile because the '#{provider}' provider's build_script method didn't return a string." unless script.is_a? String
+      script = ral.provider.dockerfile(context)
+      raise Puppet::Error, "Resource type '#{ral.type}' can't be included in the Dockerfile because the '#{provider}' provider's dockerfile method didn't return a string." unless script.is_a? String
       context.push_command(script)
     end
 
@@ -156,7 +158,7 @@ Puppet::Functions.create_function('dockerfile') do
         raise Puppet::Error, "Resource type '#{ral.type}' can't be included in the Dockerfile because it lacks the appropriate provider for the osfamily '#{context.osfamily}' (#{provider})"
       end
 
-      raise Puppet::Error, "Resource type '#{ral.type}' can't be included in the Dockerfile because the '#{provider}' provider doesn't implement a build_script method." unless ral.provider.respond_to?(:build_script)
+      raise Puppet::Error, "Resource type '#{ral.type}' can't be included in the Dockerfile because the '#{provider}' provider doesn't implement a dockerfile method." unless ral.provider.respond_to?(:dockerfile)
 
       ral
     end
