@@ -11,7 +11,7 @@ describe Puppet::Type.type(:package).provider(:docker_el) do
     let(:context) { StubContext.for 'el' }
 
     it "should return the correct string" do
-      result = subject.dockerfile(context)
+      result = subject.dockerfile_line(context)
       expect(result).to eq("CMD yum install foo")
     end
   end
@@ -26,7 +26,7 @@ describe Puppet::Type.type(:package).provider(:docker_el) do
     let(:context) { StubContext.for 'el' }
 
     it "should return the correct string" do
-      result = subject.dockerfile(context)
+      result = subject.dockerfile_line(context)
       expect(result).to eq("CMD yum install foo-bar")
     end
   end

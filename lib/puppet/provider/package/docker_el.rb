@@ -4,7 +4,7 @@ Puppet::Type.type(:package).provide(:docker_el) do
   confine :feature => :docker
   has_features :versionable
 
-  def dockerfile(context)
+  def dockerfile_line(context)
     version = @resource[:ensure]
     script = "CMD yum install #{@resource[:name]}"
 

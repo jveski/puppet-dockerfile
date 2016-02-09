@@ -144,8 +144,8 @@ Puppet::Functions.create_function('dockerfile') do
       check_preconfiguration
 
       ral = set_provider(resource)
-      script = ral.provider.dockerfile(context)
-      raise Puppet::Error, "Resource type '#{ral.type}' can't be included in the Dockerfile because the '#{provider}' provider's dockerfile method didn't return a string." unless script.is_a? String
+      script = ral.provider.dockerfile_line(context)
+      raise Puppet::Error, "Resource type '#{ral.type}' can't be included in the Dockerfile because the '#{provider}' provider's dockerfile_line method didn't return a string." unless script.is_a? String
       context.push_command(script)
     end
 
@@ -158,7 +158,7 @@ Puppet::Functions.create_function('dockerfile') do
         raise Puppet::Error, "Resource type '#{ral.type}' can't be included in the Dockerfile because it lacks the appropriate provider for the osfamily '#{context.osfamily}' (#{provider})"
       end
 
-      raise Puppet::Error, "Resource type '#{ral.type}' can't be included in the Dockerfile because the '#{provider}' provider doesn't implement a dockerfile method." unless ral.provider.respond_to?(:dockerfile)
+      raise Puppet::Error, "Resource type '#{ral.type}' can't be included in the Dockerfile because the '#{provider}' provider doesn't implement a dockerfile_line method." unless ral.provider.respond_to?(:dockerfile_line)
 
       ral
     end

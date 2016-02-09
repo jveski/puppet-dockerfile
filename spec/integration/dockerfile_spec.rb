@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe "the dockerfile function" do
-  it "raises an error if the provider doesn't have a dockerfile method" do
+  it "raises an error if the provider doesn't have a dockerfile_line method" do
     Puppet::Type.newtype(:test) do
       newparam(:name) do
       end
@@ -18,17 +18,17 @@ describe "the dockerfile function" do
     test { 'baz': }
     MANIFEST
 
-    expect{ dockerfile(pp) }.to raise_error(/doesn't implement a dockerfile/)
+    expect{ dockerfile(pp) }.to raise_error(/doesn't implement a dockerfile_line/)
   end
 
-  it "raises an error if the provider's dockerfile method returns an array" do
+  it "raises an error if the provider's dockerfile_line method returns an array" do
     Puppet::Type.newtype(:test) do
       newparam(:name) do
       end
     end
 
     Puppet::Type.type(:test).provide(:docker_bar) do
-      def dockerfile(context)
+      def dockerfile_line(context)
         []
       end
     end
