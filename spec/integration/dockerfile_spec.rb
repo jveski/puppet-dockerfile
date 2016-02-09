@@ -1,6 +1,49 @@
 require 'spec_helper'
 
 describe "the dockerfile function" do
+  it "raises an error if the provider doesn't have a build_script method" do
+    Puppet::Type.newtype(:test) do
+      newparam(:name) do
+      end
+    end
+
+    Puppet::Type.type(:test).provide(:docker_bar) do
+    end
+
+    pp = <<-MANIFEST
+    parent_image { 'foo':
+      osfamily => 'bar',
+    }
+
+    test { 'baz': }
+    MANIFEST
+
+    expect{ dockerfile(pp) }.to raise_error(/doesn't implement a build_script/)
+  end
+
+  it "raises an error if the provider's build_script method returns an array" do
+    Puppet::Type.newtype(:test) do
+      newparam(:name) do
+      end
+    end
+
+    Puppet::Type.type(:test).provide(:docker_bar) do
+      def build_script(context)
+        []
+      end
+    end
+
+    pp = <<-MANIFEST
+    parent_image { 'foo':
+      osfamily => 'bar',
+    }
+
+    test { 'baz': }
+    MANIFEST
+
+    expect{ dockerfile(pp) }.to raise_error(/didn't return a string/)
+  end
+
   it "raises an error when given a single file resource" do
     pp = <<-MANIFEST
     package { 'test':
