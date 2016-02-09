@@ -29,7 +29,6 @@ TODO
 * Traverse dependency graph instead of including resources in evaluation order
 * Types for misc. Dockerfile directives (env, expose, etc.)
 * Make each Dockerfile directive "safe" (i.e. escape where necessary)
-* Include common (official) parent image to osfamily mappings (centos, ubuntu, etc.)
 * Examples in README
 * Acceptance tests (with Docker in Travis)
 
