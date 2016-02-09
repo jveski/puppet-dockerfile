@@ -39,7 +39,7 @@ def compile(pp)
   test_modulepath = "#{Puppet[:environmentpath]}/#{Puppet[:environment]}/modules"
   unless File.symlink? "#{test_modulepath}/dockerfile"
     FileUtils.mkdir_p(test_modulepath)
-    FileUtils.ln_s(path, test_modulepath)
+    FileUtils.ln_s(path, "#{test_modulepath}/dockerfile")
   end
 
   node = Puppet::Node.new('testnode')
