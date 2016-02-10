@@ -95,7 +95,7 @@ Puppet::Functions.create_function('dockerfile') do
     # Context contains the Visitor's state, and will ultimately
     # be visited by an instance of Dockerfile.
     class Context
-      attr_accessor :parent_image, :osfamily, :visited, :entrypoint
+      attr_accessor :osfamily, :visited
       attr_reader :scripts
 
       def initialize
@@ -112,9 +112,6 @@ Puppet::Functions.create_function('dockerfile') do
       end
 
       def accept(visitor)
-        visitor.append_directive(:from, parent_image) if parent_image
-        visitor.append_directive(:entrypoint, entrypoint) if entrypoint
-
         scripts.each { |script| visitor.append_line(script) }
       end
     end
@@ -126,23 +123,11 @@ Puppet::Functions.create_function('dockerfile') do
     end
 
     def visit(resource)
-      ral_resource = resource.to_ral
+      resource = resource.to_ral
 
-      case ral_resource.type
-      when :entrypoint
-        context.entrypoint = ral_resource[:command]
-      when :parent_image
-        context.osfamily = ral_resource[:osfamily]
-        context.parent_image = ral_resource.name
-      else
-        visit_resource(ral_resource)
-      end
+      context.osfamily = resource[:osfamily] if resource.type == :parent_image
 
-      context.increment!
-    end
-
-    def visit_resource(resource)
-      check_preconfiguration
+      raise Puppet::Error, "parent_image resource declaration was not first in dockerfile lambda. You must set the OS family of the parent container image before resources can be evaluated for the Dockerfile." unless context.osfamily
 
       provider = assign_provider(resource)
 
@@ -153,6 +138,7 @@ Puppet::Functions.create_function('dockerfile') do
       raise Puppet::Error, "Resource type '#{resource.type}' can't be included in the Dockerfile because the '#{provider}' provider's dockerfile_line method didn't return a string." unless script.is_a? String
 
       context.push_command(script)
+      context.increment!
     end
 
     def assign_provider(resource, provider="docker_#{context.osfamily}", fallback=true)
@@ -162,17 +148,6 @@ Puppet::Functions.create_function('dockerfile') do
         fallback ? assign_provider(resource, "docker", false)
         : raise("Resource type '#{resource.type}' can't be included in the Dockerfile because it lacks a Dockerfile provider.")
       end
-    end
-
-    # check_preconfiguration ensures that any dockerfile-specific
-    # resource declarations which are required by the visitor have
-    # already been evaluated.
-    def check_preconfiguration
-      raise Puppet::Error, "parent_image resource declaration was not first in dockerfile lambda. You must set the OS family of the parent container image before resources can be evaluated for the Dockerfile." unless ready?
-    end
-
-    def ready?
-      context.visited != 0 && context.osfamily != ""
     end
   end
 end

@@ -68,7 +68,7 @@ describe "the dockerfile function" do
     expect{ dockerfile(pp) }.to raise_error(/didn't return a string/)
   end
 
-  it "raises an error when given a single file resource" do
+  it "raises an error when given a single package resource" do
     pp = <<-MANIFEST
     package { 'test':
       ensure => present,
