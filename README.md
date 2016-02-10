@@ -10,14 +10,15 @@ By following this design, anyone who understands the Puppet language can build D
 
 
 ## Providers
-Each resource type declared within the Dockerfile must have a Docker-specific resource provider appropriate for the parent image's distribution.
+Each resource type declared within the Dockerfile must have a Docker-specific resource provider.
 The `parent_image` resource type is provided to set the parent image's name, and its osfamily for this purpose.
 
-The provider name is prefixed with `docker_`, and suffixed with the value of `parent_image`'s osfamily attribute, i.e. `docker_el`.
+A resource's Dockerfile provider can be platform specific or generic.
+Generic providers are simply named `docker` and should theoretically support any container distribution.
+Platform specific providers are named `docker_${osfamily}`, and will take precedence over the generic provider if both are provided.
 
-Each provider should respond to the `build_script` method, which will be invoked by the dockerfile function during resource evaluation, and provided with a visitor context object.
-It is expected that each provider's `build_script` method will return a string to be included in a Dockerfile `CMD` directive.
-The command doesn't need to be idempotent since it will only ever be invoked during the container build process.
+Any Dockerfile provider should respond to the `dockerfile_line` method, which will be invoked by the dockerfile function during resource evaluation, and provided with a visitor context object.
+It is expected that each provider's `dockerfile_line` method will return a string to be included in a Dockerfile.
 
 
 ## Examples

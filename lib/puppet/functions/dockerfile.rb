@@ -125,10 +125,6 @@ Puppet::Functions.create_function('dockerfile') do
       @context = Context.new
     end
 
-    def provider
-      "docker_#{context.osfamily}"
-    end
-
     def visit(resource)
       ral_resource = resource.to_ral
 
@@ -148,11 +144,7 @@ Puppet::Functions.create_function('dockerfile') do
     def visit_resource(resource)
       check_preconfiguration
 
-      begin
-        resource.provider = provider
-      rescue
-        raise Puppet::Error, "Resource type '#{resource.type}' can't be included in the Dockerfile because it lacks the appropriate provider for the osfamily '#{context.osfamily}' (#{provider})"
-      end
+      provider = assign_provider(resource)
 
       raise Puppet::Error, "Resource type '#{resource.type}' can't be included in the Dockerfile because the '#{provider}' provider doesn't implement a dockerfile_line method." unless resource.provider.respond_to?(:dockerfile_line)
 
@@ -161,6 +153,15 @@ Puppet::Functions.create_function('dockerfile') do
       raise Puppet::Error, "Resource type '#{resource.type}' can't be included in the Dockerfile because the '#{provider}' provider's dockerfile_line method didn't return a string." unless script.is_a? String
 
       context.push_command(script)
+    end
+
+    def assign_provider(resource, provider="docker_#{context.osfamily}", fallback=true)
+      begin
+        resource.provider = provider
+      rescue
+        fallback ? assign_provider(resource, "docker", false)
+        : raise("Resource type '#{resource.type}' can't be included in the Dockerfile because it lacks a Dockerfile provider.")
+      end
     end
 
     # check_preconfiguration ensures that any dockerfile-specific

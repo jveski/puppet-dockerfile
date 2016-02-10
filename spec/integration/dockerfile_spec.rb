@@ -1,13 +1,16 @@
 require 'spec_helper'
 
 describe "the dockerfile function" do
-  it "raises an error if the provider doesn't have a dockerfile_line method" do
-    Puppet::Type.newtype(:test) do
+  it "falls back to the generic provider if the resource doesn't have a platform specific one" do
+    Puppet::Type.newtype(:foo_type) do
       newparam(:name) do
       end
     end
 
-    Puppet::Type.type(:test).provide(:docker_bar) do
+    Puppet::Type.type(:foo_type).provide(:docker) do
+      def dockerfile_line(context)
+        "test line"
+      end
     end
 
     pp = <<-MANIFEST
@@ -15,19 +18,40 @@ describe "the dockerfile function" do
       osfamily => 'bar',
     }
 
-    test { 'baz': }
+    foo_type { 'baz': }
     MANIFEST
 
-    expect{ dockerfile(pp) }.to raise_error(/doesn't implement a dockerfile_line/)
+    result = dockerfile(pp)
+    expect(result).to include("test line")
   end
 
-  it "raises an error if the provider's dockerfile_line method returns an array" do
-    Puppet::Type.newtype(:test) do
+  it "raises an error if the provider doesn't have a dockerfile_line method" do
+    Puppet::Type.newtype(:bar_type) do
       newparam(:name) do
       end
     end
 
-    Puppet::Type.type(:test).provide(:docker_bar) do
+    Puppet::Type.type(:bar_type).provide(:docker_bar) do
+    end
+
+    pp = <<-MANIFEST
+    parent_image { 'foo':
+      osfamily => 'bar',
+    }
+
+    bar_type { 'baz': }
+    MANIFEST
+
+    expect{ dockerfile(pp) }.to raise_error(/'docker_bar' provider doesn't implement a dockerfile_line/)
+  end
+
+  it "raises an error if the provider's dockerfile_line method returns an array" do
+    Puppet::Type.newtype(:baz_type) do
+      newparam(:name) do
+      end
+    end
+
+    Puppet::Type.type(:baz_type).provide(:docker_bar) do
       def dockerfile_line(context)
         []
       end
@@ -38,7 +62,7 @@ describe "the dockerfile function" do
       osfamily => 'bar',
     }
 
-    test { 'baz': }
+    baz_type { 'baz': }
     MANIFEST
 
     expect{ dockerfile(pp) }.to raise_error(/didn't return a string/)
@@ -65,7 +89,7 @@ describe "the dockerfile function" do
     }
     MANIFEST
 
-    expect{ dockerfile(pp) }.to raise_error(/lacks the appropriate provider/)
+    expect{ dockerfile(pp) }.to raise_error(/lacks a Dockerfile provider/)
   end
 
   it "allows access to variables in the parent scope" do
