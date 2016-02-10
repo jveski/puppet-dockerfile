@@ -108,7 +108,7 @@ describe "the dockerfile function" do
     }
     MANIFEST
 
-    expect(result).to eq("FROM foo\n")
+    expect(result).to eq("FROM foo")
   end
 
   it "returns the correct string given a parent_image resource" do
@@ -118,7 +118,7 @@ describe "the dockerfile function" do
     }
     MANIFEST
 
-    expect(result).to eq("FROM centos:7\n")
+    expect(result).to eq("FROM centos:7")
   end
 
   it "returns the correct string given parent_image and file resources" do
@@ -136,7 +136,7 @@ describe "the dockerfile function" do
     }
     MANIFEST
 
-    expect(result).to eq("FROM centos:7\nRUN yum install test -y\nRUN yum install test2 -y\n")
+    expect(result).to eq("FROM centos:7\nRUN yum install test -y\nRUN yum install test2 -y")
   end
 
   it "returns the correct string when given no resources" do

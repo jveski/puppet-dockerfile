@@ -30,8 +30,7 @@ Puppet::Functions.create_function('dockerfile') do
     # instantiated scope.
     rewrap_puppet_proc_closure(scope, &block).call
 
-    dockerfile = visit_resources(scope.compiler.catalog.resources)
-    dockerfile.content
+    visit_resources(scope.compiler.catalog.resources)
   end
 
   # TODO: Walk dependency graph instead of visiting in evaluation order.
@@ -41,7 +40,7 @@ Puppet::Functions.create_function('dockerfile') do
     resources.reject! {|resource| resource.type == 'Stage' || resource.type == 'Class' }
     resources.map(&visitor.method(:visit))
 
-    Dockerfile.from_context(visitor.context)
+    visitor.context.to_dockerfile
   end
 
   # rewrap_puppet_proc_closure takes a PuppetProc as
@@ -62,31 +61,6 @@ Puppet::Functions.create_function('dockerfile') do
     Puppet::Pops::Evaluator::PuppetProc.new(closure) {|*args| closure.call(*args) }
   end
 
-  # Dockerfile models a Dockerfile visitor intended to
-  # evaluate a Visitor::Context, and ultimately compile
-  # a usable Dockerfile in a string.
-  class Dockerfile
-    attr_reader :content
-
-    def self.from_context(context)
-      instance = new
-      context.accept(instance)
-      instance
-    end
-
-    def initialize
-      @content = ""
-    end
-
-    def append_directive(key, value)
-      @content.concat("#{key.to_s.upcase} #{value}\n")
-    end
-
-    def append_line(line)
-      @content.concat("#{line}\n")
-    end
-  end
-
   # Visitor is responsible for two things primarily:
   # containing the visitor context object, and providing logic
   # to evaluate various resources while handling the interface
@@ -95,24 +69,20 @@ Puppet::Functions.create_function('dockerfile') do
     # Context contains the Visitor's state, and will ultimately
     # be visited by an instance of Dockerfile.
     class Context
-      attr_accessor :osfamily, :visited
-      attr_reader :scripts
+      attr_accessor :osfamily, :lines
+      attr_reader :visited
 
       def initialize
         @visited = 0
-        @scripts = []
+        @lines = []
       end
 
       def increment!
         @visited += 1
       end
 
-      def push_command(script)
-        scripts << script
-      end
-
-      def accept(visitor)
-        scripts.each { |script| visitor.append_line(script) }
+      def to_dockerfile
+        lines.join("\n")
       end
     end
 
@@ -124,7 +94,6 @@ Puppet::Functions.create_function('dockerfile') do
 
     def visit(resource)
       resource = resource.to_ral
-
       context.osfamily = resource[:osfamily] if resource.type == :parent_image
 
       raise Puppet::Error, "parent_image resource declaration was not first in dockerfile lambda. You must set the OS family of the parent container image before resources can be evaluated for the Dockerfile." unless context.osfamily
@@ -133,11 +102,11 @@ Puppet::Functions.create_function('dockerfile') do
 
       raise Puppet::Error, "Resource type '#{resource.type}' can't be included in the Dockerfile because the '#{provider}' provider doesn't implement a dockerfile_line method." unless resource.provider.respond_to?(:dockerfile_line)
 
-      script = resource.provider.dockerfile_line(context)
+      line = resource.provider.dockerfile_line(context)
 
-      raise Puppet::Error, "Resource type '#{resource.type}' can't be included in the Dockerfile because the '#{provider}' provider's dockerfile_line method didn't return a string." unless script.is_a? String
+      raise Puppet::Error, "Resource type '#{resource.type}' can't be included in the Dockerfile because the '#{provider}' provider's dockerfile_line method didn't return a string." unless line.is_a? String
 
-      context.push_command(script)
+      context.lines << line
       context.increment!
     end
 
