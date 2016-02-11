@@ -30,6 +30,6 @@ describe Puppet::Type.type(:file).provider(:docker) do
       :ensure   => 'present',
     ).provider.dockerfile_line(nil)
 
-    expect(line).to eq('ADD /tmp/foo /tmp/bar')
+    expect(line).to eq('ADD /tmp/bar /tmp/foo')
   end
 end
